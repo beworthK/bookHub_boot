@@ -1,0 +1,35 @@
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!--/*
+	BookController 에서 발생하는 오류를 보여주는 페이지 중
+	- HttpStatus.UNPROCESSABLE_ENTITY(422)의 오류 페이지
+*/-->	
+<!--/*  // 타임리프 주석방식
+ 	
+	th:inline="javascript"	
+	ㄴ 타임리프에서 스크립트 영역 선언 시 사용 
+	ㄴ 타임리프에서 스크립트 영역은 CDATA 로 감싸야 한다. 
+	/*<![CDATA[*/  로 시작하고 /*]]>*/ 로 끝난다
+    ㄴ 스크립트 영역 프로퍼티 사용시 /*[[${키이름}]]*/ 으로 나타낸다 
+    cf. 자바스크립트에서 <%= %> 같은 거
+    
+*/-->
+<head>
+	<title>Unprocessable Entity</title>
+</head>
+
+<body>
+	
+	<script type="text/javascript" th:inline="javascript">
+		/*<![CDATA[*/ 
+		var message = /*[[${message}]]*/ 'message';
+		var loc = /*[[${location}]]*/ 'location';
+		/*]]>*/
+		
+		alert(message);
+		location.href = loc;
+		
+	</script>
+</body>
+
+</html>

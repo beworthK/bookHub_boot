@@ -1,11 +1,17 @@
 package com.example.bookHub.book.controller;
 
+import java.util.NoSuchElementException;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.ModelAndView;
 
 import com.example.bookHub.book.dto.BookCreateDTO;
+import com.example.bookHub.book.dto.BookReadResponseDTO;
 import com.example.bookHub.book.service.BookService;
 
 /**
@@ -51,5 +57,44 @@ public class BookController {
 		// String.format은 문자열의 전체적인 구조를 보기 쉽게 만들고, 문자열이 아닌 객체는 자동으로 문자열로 만들어주므로 깔끔한 코드 작성시 주로 사용
 		return String.format("redirect:/book/read/%s", bookId); // %s = bookId
 	}
-
+	
+	/**
+	 * 책 정보 읽기
+	 * 
+	 * {bookId} - HTTP 주소를 통해 입력받는다
+	 * @GetMapping - 경로 매개변수 정의
+	 * 
+	 * @param bookId
+	 * @return
+	 */
+	@GetMapping("/book/read/{bookId}")
+	public ModelAndView read(@PathVariable Integer bookId) {
+		
+		// 스프링에서 데이터(Model)와 화면(View)을 함께 담을 수 있는 객체
+		ModelAndView mav = new ModelAndView();
+		
+		// try - catch @ControllerAdvice를 통해 공통 영역으로 분리하는 것이 일반적
+		try {
+			
+			BookReadResponseDTO bookReadResponseDTO = this.bookService.read(bookId);
+			
+			// addObject( 뷰에서 사용할 이름, 뷰에서 사용할 값)
+			mav.addObject("bookReadResponseDTO", bookReadResponseDTO);
+			// setViewName - 뷰 경로 지정
+			mav.setViewName("book/read");
+			
+		} catch (NoSuchElementException ex) {
+			// 책 정보가 없다면(=예외발생) 실행되는 코드
+			
+			// UNPROCESSABLE_ENTITY = 422 오류 (서버가 요청을 이해하고 요청문법도 올바르지만, 요청된 지시를 따를 수 없음)
+			mav.setStatus(HttpStatus.UNPROCESSABLE_ENTITY); // 보통 400오류지만 여기선 명확한 메세지송출을 위해 422 오류로 지정 
+			mav.addObject("message", "책 정보가 없습니다.");
+			mav.addObject("location", "/book");
+			mav.setViewName("common/error/422"); // 오류 발생 시 오류 경로의 뷰를 보여주기
+			
+		}
+		
+		return mav;
+	}
+	
 }

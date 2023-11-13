@@ -1,14 +1,17 @@
 package com.example.bookHub.book.service;
 
+import java.util.NoSuchElementException;
+
 import org.springframework.stereotype.Service;
 
 import com.example.bookHub.book.dto.BookCreateDTO;
+import com.example.bookHub.book.dto.BookReadResponseDTO;
 import com.example.bookHub.book.entity.Book;
 import com.example.bookHub.book.entity.BookRepository;
 
 /**
  * @Service
- * 	- 서비스 클래스는 실제 비즈니스 로직 흐름이 실행되는 곳.
+ * 	- 서비스 클래스는 실제 [비즈니스 로직] 흐름이 실행되는 곳.
  *  - HTTP 계층과 무관하게 여러 엔티티 혹은 다른 서비스 레이어를 이용해서 원하는 결과를 얻어내는 레이어이다.
  */
 @Service
@@ -49,5 +52,27 @@ public class BookService {
 		
 		return book.getBookId(); // PK 값을 반환하여 바로 보기 화면으로 이동한다
 	}
+	
+	/**
+	 * 읽기 메소드 
+	 * @param bookId // 매개변수
+	 * @return
+	 * @throws NoSuchElementException //orElseThrow 가 던지는 예외
+	 */
+	public BookReadResponseDTO read(Integer bookId) throws NoSuchElementException {
+		
+		// bookRepository - JpaRepository 인터페이스 (CRUD Repository 정의되어 있음)
+		// findById 메소드는 Optional<Book> 객체를 반환.
+		// Optional 객체는 값이 없으면 Optional 객체를 반환하므로 필요시에만 null체크를 할 수 있다.
+		// orElseThrow - 내부값이 null 이면 예외(NoSuchElementException)를 던진다.
+		Book book = this.bookRepository.findById(bookId).orElseThrow();
+		
+		// 책 응답 DTO, 응답을 반환하는 BookFactory() 메소드 결과 리턴
+		BookReadResponseDTO bookReadResponseDTO = new BookReadResponseDTO();
+		bookReadResponseDTO.fromBook(book);
+		
+		return bookReadResponseDTO;
+	}
+	
 }
 
