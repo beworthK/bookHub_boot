@@ -128,8 +128,6 @@ public class BookController {
 	
 	/**
 	 * 책 정보 수정 메소드
-	 * 
-	 * 
 	 * @param bookEditDTO
 	 * @param errors
 	 * @return
@@ -172,6 +170,17 @@ public class BookController {
 		return mav;
 	}
 	
+	/**
+	 * 책 정보 삭제 메소드
+	 * @param bookId // 매개변수가 하나 뿐(bookId) 이므로 dto 대시 바로 파라미터를 입력받는다
+	 * @return
+	 * @throws NoSuchElementException
+	 */
+	@PostMapping("/book/delete")
+	public String delete(Integer bookId) throws NoSuchElementException{
+		this.bookService.delete(bookId);
+		return "redirect:/book/list"; // 삭제 후 목록으로 이동
+	}
 	
 	
 	/**

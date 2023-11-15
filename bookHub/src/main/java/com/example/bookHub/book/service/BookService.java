@@ -98,7 +98,6 @@ public class BookService {
 	
 	/**
 	 * 수정 기능 메소드
-	 * 
 	 * @param bookEditDTO
 	 * @throws NoSuchElementException
 	 */
@@ -117,6 +116,17 @@ public class BookService {
 	
 	}
 
+	/**
+	 * 삭제 기능 메소드
+	 * @param bookId
+	 * @throws NoSuchElementException
+	 */
+	public void delete(Integer bookId) throws NoSuchElementException {
+		
+		Book book = this.bookRepository.findById(bookId).orElseThrow();
+		this.bookRepository.delete(book); // JPA 에서 삭제는 delete
+	
+	}
 	
 }
 
