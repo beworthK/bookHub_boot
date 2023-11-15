@@ -5,6 +5,8 @@ import lombok.NonNull;
 import lombok.Setter;
 
 /**
+ *  책 입력 DTO
+ * 
  *  DTO(Data Transfer Object)는 값을 담는 컨테이너 객체
  *  클라이언트가 서버로 전달한 값들을 담는 역할
  *  해당 프로젝트에서너는 클라이언트의 http 파라미터를 담는 컨테이너 객체로 사용된다
@@ -23,6 +25,7 @@ public class BookCreateDTO {
 	 */
 	@NonNull
 	private String title;
+	
 	@NonNull
 	private Integer price;
 	

@@ -5,6 +5,8 @@ import java.util.NoSuchElementException;
 import org.springframework.stereotype.Service;
 
 import com.example.bookHub.book.dto.BookCreateDTO;
+import com.example.bookHub.book.dto.BookEditDTO;
+import com.example.bookHub.book.dto.BookEditResponseDTO;
 import com.example.bookHub.book.dto.BookReadResponseDTO;
 import com.example.bookHub.book.entity.Book;
 import com.example.bookHub.book.entity.BookRepository;
@@ -67,12 +69,54 @@ public class BookService {
 		// orElseThrow - 내부값이 null 이면 예외(NoSuchElementException)를 던진다.
 		Book book = this.bookRepository.findById(bookId).orElseThrow();
 		
-		// 책 응답 DTO, 응답을 반환하는 BookFactory() 메소드 결과 리턴
+		// 책 응답 DTO
 		BookReadResponseDTO bookReadResponseDTO = new BookReadResponseDTO();
 		bookReadResponseDTO.fromBook(book);
+		return bookReadResponseDTO; // 응답을 반환하는 BookFactory() 메소드 결과 리턴
 		
-		return bookReadResponseDTO;
 	}
+	
+	/**
+	 * 수정 메소드 - 책 수정 화면을 보여주는 기능
+	 * @param bookId
+	 * @return
+	 * @throws NoSuchElementException
+	 */
+	public BookEditResponseDTO edit(Integer bookId) throws NoSuchElementException {
+		
+		Book book = this.bookRepository.findById(bookId).orElseThrow();
+		
+		/*
+		BookEditResponseDTO bookEditResponseDTO = new BookEditResponseDTO();
+		bookEditResponseDTO.fromBook(book);
+		return BookEditResponseDTO.BookFactory(book);
+		위 방식을 아래 코드 하나로 해결
+		*/
+		
+		return BookEditResponseDTO.BookFactory(book);
+	}
+	
+	/**
+	 * 수정 기능 메소드
+	 * 
+	 * @param bookEditDTO
+	 * @throws NoSuchElementException
+	 */
+	public void update(BookEditDTO bookEditDTO) throws NoSuchElementException {
+		
+		// 1. 데이터베이스에 저장된 책 정보 가져오기
+		Book book = this.bookRepository.findById(bookEditDTO.getBookId()).orElseThrow();
+		
+		// 2. 입력 커맨드 객체에 필요하 필드를 추려내서 데이터베이스에 저장할 책 정보를 변경
+		// cf. 어플리케이션의 책 정보만 가지고 있는 상태(데이터베이스와 연동 x)
+		book = bookEditDTO.fill(book);
+
+		// 3. 실제 데이터를 데이터베이스에 저장
+		// cf. JPA 에서는 입력/수정 전부 save 메소드(pk 값 있으면 update, 없으면 insert)
+		this.bookRepository.save(book);
+	
+	}
+
 	
 }
 

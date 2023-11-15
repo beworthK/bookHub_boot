@@ -1,16 +1,25 @@
 package com.example.bookHub.book.controller;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.Errors;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.example.bookHub.book.dto.BookCreateDTO;
+import com.example.bookHub.book.dto.BookEditDTO;
+import com.example.bookHub.book.dto.BookEditResponseDTO;
 import com.example.bookHub.book.dto.BookReadResponseDTO;
 import com.example.bookHub.book.service.BookService;
 
@@ -63,7 +72,6 @@ public class BookController {
 	 * 
 	 * {bookId} - HTTP 주소를 통해 입력받는다
 	 * @GetMapping - 경로 매개변수 정의
-	 * 
 	 * @param bookId
 	 * @return
 	 */
@@ -94,6 +102,118 @@ public class BookController {
 			
 		}
 		
+		return mav;
+	}
+
+	/**
+	 * 책 정보 수정페이지 이동 메소드
+	 * @param bookId
+	 * @return
+	 * @throws NoSuchElementException 
+	 * - try-catch 로 잡지 않고, @ExceptionHandler 를 컨트롤러에 추가함으로써 가독성을 높인다
+	 * - 컨트롤러 메소드에 반드시 throws 를 지정할 필요는 없지만, 
+	 *   만약 throws 가 없다면 오류가 난ㅆ을대 어떤 식으로 처리되는지 일일이 메소드 정의를 확인해야 하므로
+	 *   코드의 명시성을 위해 일부러 throws NoSuchElementException 코드를 추가한다.
+	 */
+	@GetMapping("/book/edit/{bookId}")
+	public ModelAndView edit(@PathVariable Integer bookId) throws NoSuchElementException {
+		ModelAndView mav = new ModelAndView();
+		
+		BookEditResponseDTO bookEditResponseDTO = this.bookService.edit(bookId);
+		mav.addObject("bookEditResponseDTO", bookEditResponseDTO);
+		mav.setViewName("book/edit");
+		
+		return mav;
+	}
+	
+	/**
+	 * 책 정보 수정 메소드
+	 * 
+	 * 
+	 * @param bookEditDTO
+	 * @param errors
+	 * @return
+	 */
+	@PostMapping("/book/edit/{bookId}")
+	public ModelAndView update(@Validated BookEditDTO bookEditDTO,	Errors errors) {
+		
+		// errors.hasErrors() : 오류 여부 확인
+		if (errors.hasErrors()) {
+			
+			// getFieldErrors() - 오류가 나 항목의 목록 가져오기
+			// stream() - 스트림으로 바꾼다 (자바8부터)
+			// map(x -> x.getField() + " : " + x.getDefaultMessage()) - "필드명 : 오류메세지" 형태로 적용, -> 는 람다식(개별항목 -> 적용할 함수) 
+			// collect(Collectors.joining("\n")) - 줄바꿈 문자를 구분자로 하여 문자열을 합친다.
+			String errorMessage = errors.getFieldErrors()
+										.stream()
+										.map(x -> x.getField() + " : " + x.getDefaultMessage())
+										.collect(Collectors.joining("\n"));
+			
+			/* 위 스트림 코드의 기존 코드스타일 방식
+			 List<String> errorMessages = new LinkedList<>();
+			 for(FieldError fieldError : errors.getFieldErrors()) {
+				String lineErrorMessage = fieldError.getField() + " : " + fieldError.getDefaultMessage();
+				errorMessages.add(lineErrorMessage);
+			 }
+			 String errorMessage = String.join("\n", errorMessages);
+			 */
+			
+			// 유효성 검사가 실패한다면 422 오류 페이지를 보여준다
+			return this.error422(errorMessage, String.format("/book/edit/%s", bookEditDTO.getBookId()));
+		}
+		
+		// 책 정보 수정
+		this.bookService.update(bookEditDTO);
+		
+		// 읽기 페이지로 이동
+		ModelAndView mav = new ModelAndView();
+		mav.setViewName(String.format("redirect:/book/read/%s", bookEditDTO.getBookId()));
+		
+		return mav;
+	}
+	
+	
+	
+	/**
+	 * noSuchElementExceptionHandler
+	 * 
+	 * NoSuchElementException 를 매번 try-catch 로 잡지 않고, 
+	 * 자동으로 처리해주는 메소드
+	 * @ExceptionHandler
+	 * @param ex
+	 * @return
+	 */
+	@ExceptionHandler(NoSuchElementException.class)
+	public ModelAndView noSuchElementExceptionHandler(NoSuchElementException ex) {
+		
+		/*
+		ModelAndView mav = new ModelAndView();
+		mav.setStatus(HttpStatus.UNPROCESSABLE_ENTITY);
+		mav.addObject("message", "책 정보가 없습니다.");
+		mav.addObject("location", "book/list");
+		mav.setViewName("common/error/422");
+		
+		return mav;
+		*/
+		
+		// 상위 코드를 error422 메소드로 빼고, 예외처리 메소드는 하기와 같이 간략화 한다.
+		return this.error422("책 정보가 없습니다.", "/book/list");
+	}
+	
+	/**
+	 * 422 오류 처리 메소드
+	 * - 책 정보가 없을 때, 유효성 검사가 실패할 경우에도 난다고 가정.
+	 * 
+	 * @param message
+	 * @param location
+	 * @return
+	 */
+	private ModelAndView error422(String message, String location) {
+		ModelAndView mav = new ModelAndView();
+		mav.setStatus(HttpStatus.UNPROCESSABLE_ENTITY);
+		mav.addObject("message", message);
+		mav.addObject("location", location);
+		mav.setViewName("common/error/422");
 		return mav;
 	}
 	
