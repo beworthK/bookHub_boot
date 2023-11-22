@@ -1,12 +1,20 @@
 package com.example.bookHub.book.service;
 
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Service;
 
 import com.example.bookHub.book.dto.BookCreateDTO;
 import com.example.bookHub.book.dto.BookEditDTO;
 import com.example.bookHub.book.dto.BookEditResponseDTO;
+import com.example.bookHub.book.dto.BookListResponseDTO;
 import com.example.bookHub.book.dto.BookReadResponseDTO;
 import com.example.bookHub.book.entity.Book;
 import com.example.bookHub.book.entity.BookRepository;
@@ -127,6 +135,55 @@ public class BookService {
 		this.bookRepository.delete(book); // JPA 에서 삭제는 delete
 	
 	}
-	
+
+	/**
+	 * 책 목록 메소드
+	 * @param title - 제목 검색
+	 * @param page  - 현재 페이지
+	 * @return
+	 */
+	public List<BookListResponseDTO> bookList(String title, Integer page) {
+		
+		final int pageSize = 3; // 한 페이지당 3개씩
+		
+		List<Book> books;
+		
+		// page 객체를  null 을 허용하는 Integer 타입으로 선언 후, 변수가 null 이라면 기본값을 0 으로 지정해준다.
+		// ㄴ 자바는 매개변수 기본값 기능이 없으므로
+		if (page == null) {
+			page = 0;
+		} else {
+			//JPA에서 페이지는 0번부터 시작한다. 이용자의 편의를 위해 1페이지부터 시작하도록 설정할 것이므로 
+			//클라이언트가 보낸 page 값에서 -1
+			page -= 1; 
+		}
+		
+		
+		if (title == null) {
+			// PageRequest.of( page, size, direction, properties) 
+			// page, size - 각각 페이징할 페이지와 페이지당 갯수
+			// direction - 정렬방향
+			// properties - 정렬기준
+			Pageable pageable = PageRequest.of(page, pageSize, Direction.DESC, "insertDateTime");
+			books = this.bookRepository.findAll(pageable).toList();
+			
+		} else {
+			// 검색조건(제목)이 있는 경우 - 제목으로 검색 후 그 결과에 페이징 정보 적용해야함.
+			
+			// 페이징 과 sort 를 나누는 방법 에시 (정렬순서가 혼재되어있을 때 유용)
+			Pageable pageable = PageRequest.of(page, pageSize); // pageable 에 페이징 정보만 담는다
+			Sort sort = Sort.by(Order.desc("insertDateTime")); // sort 객체를 이용해서 정렬 정보 지정
+			pageable.getSort().and(sort); 
+			
+			// 제목으로 검색(findByTitleContains) 
+			books = this.bookRepository.findByTitleContains(title, pageable);
+		}
+		
+		// 생성자를 이용해서 응답객체를 만들어 낸다
+		return books.stream()
+				    .map(book -> new BookListResponseDTO(book.getBookId(), book.getTitle()))
+				    .collect(Collectors.toList());
+
+	}
 }
 

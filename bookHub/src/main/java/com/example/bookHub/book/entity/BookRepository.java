@@ -1,5 +1,8 @@
 package com.example.bookHub.book.entity;
 
+import java.util.List;
+
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
@@ -14,4 +17,24 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface BookRepository extends JpaRepository<Book, Integer> {
 
+	/* 목록 메소드
+	 * - JPA 에서 [검색] 을 위해서는 리포지터리 인터페이스를 
+	 *   findBy{멤버변수명}(멤버변수타입, 매개변수) 형식으로 사용한다.
+	 * - Pageable : 페이징 정렬 정보를 담고 있는 인터페이스
+	 * - List<Book> : JpaRepository 에서 반복가능한 Iterable 인터페이스를 구현한 타입은 자동으로 목록으로 반환한다.   
+	 * - 인터페이스 이므로 구현체는 없다.
+	 */
+	// like '%title%' as contain
+	public List<Book> findByTitleContains(String title, Pageable pageable);
+	
+	
+	// like 'title%' as startswith
+ 	// public List<Book> findByTitleStartsWith(String title, Pageable pageable);
+ 	
+ 	// like '%title' as endwith
+  	// public List<Book> findByTitleEndsWith(String title, Pageable pageable);
+  	
+  	// = 'title'
+  	// public List<Book> findByTitle(String title, Pageable pageable);
+	
 }

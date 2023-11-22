@@ -1,6 +1,5 @@
 package com.example.bookHub.book.controller;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
-import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +18,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.example.bookHub.book.dto.BookCreateDTO;
 import com.example.bookHub.book.dto.BookEditDTO;
 import com.example.bookHub.book.dto.BookEditResponseDTO;
+import com.example.bookHub.book.dto.BookListResponseDTO;
 import com.example.bookHub.book.dto.BookReadResponseDTO;
 import com.example.bookHub.book.service.BookService;
 
@@ -180,6 +179,26 @@ public class BookController {
 	public String delete(Integer bookId) throws NoSuchElementException{
 		this.bookService.delete(bookId);
 		return "redirect:/book/list"; // 삭제 후 목록으로 이동
+	}
+	
+	/**
+	 * 책 목록 메소드
+	 * 
+	 * 하나의 컨트롤러 메소드에 두 개 이상의 엔드포인트를 정의하려면
+	 * @GetMapping의 value 값을 배열 형태로 사용한다.
+	 * value= {"/book/list", "/book"} - /book/list 든, /book 이든 모두 bookList 메소드가 실행된다
+	 * 
+	 * @param title
+	 * @param page
+	 * @param mav
+	 * @return
+	 */
+	@GetMapping(value= {"/book/list", "/book"})
+	public ModelAndView bookList(String title, Integer page, ModelAndView mav){
+		mav.setViewName("/book/list");
+		List<BookListResponseDTO> books = this.bookService.bookList(title, page);
+		mav.addObject("books", books);
+		return mav;
 	}
 	
 	
